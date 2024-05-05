@@ -2,18 +2,12 @@ require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
 const app = express();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 3000;
-const corsOptions = {
-  origin: ['http://localhost:5173', 'http://localhost:5174', '***'],
-  credentials: true,
-  optionSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
+
 const uri = `mongodb+srv://${process.env.USER}:${process.env.PASS}@cluster0.zrua0aj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -27,25 +21,14 @@ async function run() {
   try {
     const serviceCollection = client.db('phCarDoctors').collection('Services');
     const bookingsCollection = client.db('phCarDoctors').collection('Bookings');
-
-    // Auth related apis
-    app.post('/jwt', async (req, res) => {
+    // Auth Related api
+    app.post('/auth/jwt', async (req, res) => {
       const user = req.body;
       console.log(user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '1h',
-      }); // generate token
-      res
-        .cookie('token', token, {
-          httpOnly: true,
-          secure: false, // in development false in production true
-          sameSite: 'none',
-          // expires : new Date(Date.now() + process.env.COOKIE_EX)
-        })
-        .send({ success: true });
+      res.send(user);
     });
 
-    // Services related apis
+    // Service related api
     app.get('/api/services', async (req, res) => {
       const cursor = serviceCollection.find();
       const result = await cursor.toArray();
@@ -72,7 +55,7 @@ async function run() {
     });
     app.post('/api/bookings/', async (req, res) => {
       const doc = req.body;
-      console.log('token', req.cookies.token); // check that if client send cookie to me
+      //   delete doc._id;
       console.log(doc);
       const result = await bookingsCollection.insertOne(doc);
       res.send(result);
