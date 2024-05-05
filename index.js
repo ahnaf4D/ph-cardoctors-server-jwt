@@ -84,7 +84,11 @@ async function run() {
       console.log(req.query.email);
       // console.log('token', req.cookies.token);
       let query = {};
-      console.log(`valid token user `, req.user);
+      console.log(`valid token user `, req.user); // valid user from jwt
+      if (req.query.email !== req.user.email) {
+        // verify specific user try to load his data
+        return res.status(403).send({ massage: 'forbidden access' });
+      } //
       if (req.query?.email) {
         query = { email: req.query.email };
       }
