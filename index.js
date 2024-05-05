@@ -22,10 +22,20 @@ async function run() {
     const serviceCollection = client.db('phCarDoctors').collection('Services');
     const bookingsCollection = client.db('phCarDoctors').collection('Bookings');
     // Auth Related api
-    app.post('/auth/jwt', async (req, res) => {
+    app.post(`/jwt`, async (req, res) => {
       const user = req.body;
       console.log(user);
-      res.send(user);
+      const token = jwt.sign(user, process.env.TOKEN_SECRET_KEY, {
+        expiresIn: '1h',
+      });
+
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: false, // false in dev and true in prod
+          sameSite: 'none',
+        })
+        .send({ success: true });
     });
 
     // Service related api
