@@ -2,11 +2,18 @@ require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const app = express();
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 3000;
-app.use(cors());
+const corsOptions = {
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.USER}:${process.env.PASS}@cluster0.zrua0aj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
@@ -33,7 +40,6 @@ async function run() {
         .cookie('token', token, {
           httpOnly: true,
           secure: false, // false in dev and true in prod
-          sameSite: 'none',
         })
         .send({ success: true });
     });
@@ -54,7 +60,8 @@ async function run() {
       res.send(result);
     });
     app.get('/api/bookings/', async (req, res) => {
-      console.log(req.query.email);
+      // console.log(req.query.email);
+      console.log('token', req.cookies.token);
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
