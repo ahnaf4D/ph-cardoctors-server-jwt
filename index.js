@@ -34,15 +34,15 @@ const verifyTokens = async (req, res, next) => {
   console.log('value of token in middleware : ', token);
   if (!token) {
     res.status(401).send({ massage: 'not authorized' });
-    jwt.verify(token, process.env.TOKEN_SECRET_KEY, (err, decoded) => {
-      if (err) {
-        console.log(err);
-        return res.status(401).send({ massage: 'unauthorized' });
-      }
-      console.log('value in the token', decoded);
-      next();
-    });
   }
+  jwt.verify(token, process.env.TOKEN_SECRET_KEY, (err, decoded) => {
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ massage: 'unauthorized' });
+    }
+    console.log('value in the token', decoded);
+    next();
+  });
 };
 async function run() {
   try {
