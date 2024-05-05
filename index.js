@@ -41,6 +41,7 @@ const verifyTokens = async (req, res, next) => {
       return res.status(401).send({ massage: 'unauthorized' });
     }
     console.log('value in the token', decoded);
+    req.user = decoded; // ensure that it is valid
     next();
   });
 };
@@ -83,6 +84,7 @@ async function run() {
       console.log(req.query.email);
       // console.log('token', req.cookies.token);
       let query = {};
+      console.log(`valid token user `, req.user);
       if (req.query?.email) {
         query = { email: req.query.email };
       }
