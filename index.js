@@ -24,12 +24,32 @@ const client = new MongoClient(uri, {
   },
 });
 
+// Custom MiddleWares
+const logger = async (req, res, next) => {
+  console.log('called : ', req.hostname, req.originalUrl);
+  next();
+};
+const verifyTokens = async (req, res, next) => {
+  const token = req.cookies.token;
+  console.log('value of token in middleware : ', token);
+  if (!token) {
+    res.status(401).send({ massage: 'not authorized' });
+    jwt.verify(token, process.env.TOKEN_SECRET_KEY, (err, decoded) => {
+      if (err) {
+        console.log(err);
+        return res.status(401).send({ massage: 'unauthorized' });
+      }
+      console.log('value in the token', decoded);
+      next();
+    });
+  }
+};
 async function run() {
   try {
     const serviceCollection = client.db('phCarDoctors').collection('Services');
     const bookingsCollection = client.db('phCarDoctors').collection('Bookings');
     // Auth Related api
-    app.post(`/jwt`, async (req, res) => {
+    app.post(`/jwt`, logger, async (req, res) => {
       const user = req.body;
       console.log(user);
       const token = jwt.sign(user, process.env.TOKEN_SECRET_KEY, {
@@ -45,7 +65,7 @@ async function run() {
     });
 
     // Service related api
-    app.get('/api/services', async (req, res) => {
+    app.get('/api/services', logger, async (req, res) => {
       const cursor = serviceCollection.find();
       const result = await cursor.toArray();
       res.send(result);
@@ -59,9 +79,9 @@ async function run() {
       const result = await serviceCollection.findOne(query, options);
       res.send(result);
     });
-    app.get('/api/bookings/', async (req, res) => {
-      // console.log(req.query.email);
-      console.log('token', req.cookies.token);
+    app.get('/api/bookings/', logger, verifyTokens, async (req, res) => {
+      console.log(req.query.email);
+      // console.log('token', req.cookies.token);
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
